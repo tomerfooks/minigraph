@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140" fill="none">
+  <!-- return loop -->
+  <path d="M118 84 Q74 136 30 84" stroke="#9DA7B3" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+  <!-- edges: fan-out and join -->
+  <g stroke="#9DA7B3" stroke-width="7" stroke-linecap="round">
+    <line x1="30" y1="70" x2="74" y2="32"/>
+    <line x1="30" y1="70" x2="74" y2="108"/>
+    <line x1="74" y1="32" x2="118" y2="70"/>
+    <line x1="74" y1="108" x2="118" y2="70"/>
+  </g>
+  <!-- nodes -->
+  <circle cx="30" cy="70" r="13" fill="#00ADD8"/>
+  <circle cx="74" cy="32" r="10" fill="#00ADD8"/>
+  <circle cx="74" cy="108" r="10" fill="#00ADD8"/>
+  <circle cx="118" cy="70" r="11" stroke="#00ADD8" stroke-width="7"/>
+</svg>
