@@ -1,4 +1,4 @@
-package tomergraph
+package minigraph
 
 import (
 	"context"

@@ -1,7 +1,7 @@
-// Package tomergraph is a minimal LangGraph for Go: a state machine of nodes
+// Package minigraph is a minimal LangGraph for Go: a state machine of nodes
 // that transform a shared, typed state, wired with static or conditional
 // edges. Build a Graph, Compile it, then Invoke or Stream.
-package tomergraph
+package minigraph
 
 import (
 	"context"
@@ -21,7 +21,7 @@ const (
 
 // ErrMaxSteps is returned when a run exceeds App.MaxSteps node
 // executions — usually a cycle that never routes to End.
-var ErrMaxSteps = errors.New("tomergraph: max steps exceeded")
+var ErrMaxSteps = errors.New("minigraph: max steps exceeded")
 
 // Node transforms the state: it receives the current state and returns the
 // next one.

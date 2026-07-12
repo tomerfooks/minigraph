@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tomerfooks/tomergraph"
+	"github.com/tomerfooks/minigraph"
 )
 
 type State struct {
@@ -21,8 +21,8 @@ type State struct {
 	Sent      bool
 }
 
-func build() (*tomergraph.App[State], error) {
-	g := tomergraph.New[State]()
+func build() (*minigraph.App[State], error) {
+	g := minigraph.New[State]()
 
 	g.AddNode("draft", func(ctx context.Context, s State) (State, error) {
 		s.Draft = fmt.Sprintf("Dear %s, our Q3 numbers are strong.", s.Recipient)
@@ -35,7 +35,7 @@ func build() (*tomergraph.App[State], error) {
 	// approve: always pause and ask. InvokeFrom routes onward from here, so the
 	// router below decides what the human's edit means.
 	g.AddNode("approve", func(ctx context.Context, s State) (State, error) {
-		return s, &tomergraph.Interrupt{Payload: "send this? " + s.Draft}
+		return s, &minigraph.Interrupt{Payload: "send this? " + s.Draft}
 	})
 
 	g.AddNode("send", func(ctx context.Context, s State) (State, error) {
@@ -43,7 +43,7 @@ func build() (*tomergraph.App[State], error) {
 		return s, nil
 	})
 
-	g.AddEdge(tomergraph.Start, "draft")
+	g.AddEdge(minigraph.Start, "draft")
 	g.AddEdge("draft", "approve")
 	g.AddRouter("approve", func(_ context.Context, s State) (string, error) {
 		if s.Approved {
@@ -51,7 +51,7 @@ func build() (*tomergraph.App[State], error) {
 		}
 		return "draft", nil // rejected: redraft with the feedback
 	})
-	g.AddEdge("send", tomergraph.End)
+	g.AddEdge("send", minigraph.End)
 
 	return g.Compile()
 }
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	saver := &tomergraph.MemorySaver[State]{}
+	saver := &minigraph.MemorySaver[State]{}
 	const thread = "email-42"
 
 	// The scripted human: rejects the first draft, approves the second.
@@ -75,7 +75,7 @@ func main() {
 	state := State{Recipient: "Ada"}
 	for {
 		state, err = app.InvokeThread(ctx, saver, thread, state)
-		var intr *tomergraph.Interrupt
+		var intr *minigraph.Interrupt
 		if !errors.As(err, &intr) {
 			break // finished (or a real error)
 		}
@@ -87,7 +87,7 @@ func main() {
 
 		// Store the answer under the interrupted node; the next InvokeThread
 		// resumes there.
-		if err := saver.Save(ctx, thread, tomergraph.Step[State]{Node: intr.Node, State: state}); err != nil {
+		if err := saver.Save(ctx, thread, minigraph.Step[State]{Node: intr.Node, State: state}); err != nil {
 			panic(err)
 		}
 	}

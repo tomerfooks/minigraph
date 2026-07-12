@@ -1,5 +1,5 @@
 // Command agent shows the classic LangGraph shape — an agent that keeps
-// calling tools until it can answer — as a tomergraph over a typed state.
+// calling tools until it can answer — as a minigraph over a typed state.
 // The "LLM" is mocked so the example runs offline.
 package main
 
@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tomerfooks/tomergraph"
+	"github.com/tomerfooks/minigraph"
 )
 
 // State flows through every node. Typed — no map[string]any.
@@ -21,7 +21,7 @@ type State struct {
 }
 
 func main() {
-	g := tomergraph.New[State]()
+	g := minigraph.New[State]()
 
 	// agent: decide to call tools or answer. A real one would call an LLM.
 	g.AddNode("agent", func(ctx context.Context, s State) (State, error) {
@@ -56,12 +56,12 @@ func main() {
 		return s, nil
 	})
 
-	g.AddEdge(tomergraph.Start, "agent")
+	g.AddEdge(minigraph.Start, "agent")
 	g.AddRouter("agent", func(ctx context.Context, s State) (string, error) {
 		if len(s.Pending) > 0 {
 			return "tools", nil
 		}
-		return tomergraph.End, nil
+		return minigraph.End, nil
 	})
 	g.AddEdge("tools", "agent")
 

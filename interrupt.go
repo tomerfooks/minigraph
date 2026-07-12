@@ -1,4 +1,4 @@
-package tomergraph
+package minigraph
 
 import "fmt"
 
@@ -27,5 +27,5 @@ type Interrupt struct {
 }
 
 func (i *Interrupt) Error() string {
-	return fmt.Sprintf("tomergraph: interrupted at %q: %v", i.Node, i.Payload)
+	return fmt.Sprintf("minigraph: interrupted at %q: %v", i.Node, i.Payload)
 }

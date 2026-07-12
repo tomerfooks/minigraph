@@ -1,4 +1,4 @@
-// Command react runs a ReAct (Reason + Act) agent on tomergraph.
+// Command react runs a ReAct (Reason + Act) agent on minigraph.
 //
 // The loop is the textbook one: the model emits a Thought and an Action, a
 // tool runs and appends an Observation, and the model reasons again over the
@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tomerfooks/tomergraph"
+	"github.com/tomerfooks/minigraph"
 )
 
 // LLM turns a prompt into a completion. Replace the mock with a real client.
@@ -125,8 +125,8 @@ func mockLLM(_ context.Context, p string) (string, error) {
 	}
 }
 
-func buildAgent(llm LLM) (*tomergraph.App[State], error) {
-	g := tomergraph.New[State]()
+func buildAgent(llm LLM) (*minigraph.App[State], error) {
+	g := minigraph.New[State]()
 
 	// reason: one LLM step. Either queues an action or produces the answer.
 	g.AddNode("reason", func(ctx context.Context, s State) (State, error) {
@@ -164,10 +164,10 @@ func buildAgent(llm LLM) (*tomergraph.App[State], error) {
 		return s, nil
 	})
 
-	g.AddEdge(tomergraph.Start, "reason")
+	g.AddEdge(minigraph.Start, "reason")
 	g.AddRouter("reason", func(_ context.Context, s State) (string, error) {
 		if s.Answer != "" {
-			return tomergraph.End, nil
+			return minigraph.End, nil
 		}
 		return "act", nil
 	})

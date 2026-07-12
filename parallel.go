@@ -1,4 +1,4 @@
-package tomergraph
+package minigraph
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 func Parallel[S any](merge func(ctx context.Context, base S, results []S) (S, error), branches ...Node[S]) Node[S] {
 	return func(ctx context.Context, state S) (S, error) {
 		if merge == nil {
-			return state, fmt.Errorf("tomergraph: Parallel with nil merge")
+			return state, fmt.Errorf("minigraph: Parallel with nil merge")
 		}
 		bctx, cancel := context.WithCancel(ctx)
 		defer cancel()

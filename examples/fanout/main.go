@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tomerfooks/tomergraph"
+	"github.com/tomerfooks/minigraph"
 )
 
 type State struct {
@@ -19,7 +19,7 @@ type State struct {
 	Report   string
 }
 
-func researcher(source string) tomergraph.Node[State] {
+func researcher(source string) minigraph.Node[State] {
 	return func(ctx context.Context, s State) (State, error) {
 		s.Finding = fmt.Sprintf("%s says %q is promising", source, s.Topic)
 		return s, nil
@@ -27,7 +27,7 @@ func researcher(source string) tomergraph.Node[State] {
 }
 
 func main() {
-	research := tomergraph.Parallel(
+	research := minigraph.Parallel(
 		func(_ context.Context, base State, results []State) (State, error) {
 			for _, r := range results {
 				base.Findings = append(base.Findings, r.Finding)
@@ -37,15 +37,15 @@ func main() {
 		researcher("web"), researcher("docs"), researcher("db"),
 	)
 
-	g := tomergraph.New[State]()
+	g := minigraph.New[State]()
 	g.AddNode("research", research)
 	g.AddNode("write", func(ctx context.Context, s State) (State, error) {
 		s.Report = fmt.Sprintf("%d sources agree: %s", len(s.Findings), strings.Join(s.Findings, "; "))
 		return s, nil
 	})
-	g.AddEdge(tomergraph.Start, "research")
+	g.AddEdge(minigraph.Start, "research")
 	g.AddEdge("research", "write")
-	g.AddEdge("write", tomergraph.End)
+	g.AddEdge("write", minigraph.End)
 
 	app, err := g.Compile()
 	if err != nil {
