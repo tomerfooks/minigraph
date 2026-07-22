@@ -1,11 +1,11 @@
 <div align="center">
 
-<img src="docs/logo.svg" width="110" alt="minigraph — nodes, edges, one loop">
+<img src="docs/logo.svg" width="110" alt="MiniGraph — LangGraph for Go, 1.2% of the code">
 
-# minigraph
+# MiniGraph
 
-**A stateful, graph-based agent runtime for Go.**
-**419 lines — with the comments in. Zero dependencies. You can read all of it.**
+**LangGraph for Go, 1.2% of the code.**
+419 lines — with the comments in. Zero dependencies. You can read all of it.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/tomerfooks/minigraph.svg)](https://pkg.go.dev/github.com/tomerfooks/minigraph)
 [![CI](https://github.com/tomerfooks/minigraph/actions/workflows/ci.yml/badge.svg)](https://github.com/tomerfooks/minigraph/actions/workflows/ci.yml)
@@ -21,7 +21,7 @@
 > better than Python or JavaScript — because of what it's always been:
 > compiled, lean, simple. One static binary, no runtime zoo, code that still
 > reads clearly at 3 a.m. And agents don't need a fancy framework. One small
-> graph engine covers lean agents *and* dynamic workflows. minigraph is that
+> graph engine covers lean agents *and* dynamic workflows. MiniGraph is that
 > engine — nodes over typed state, cyclic edges, and nothing you didn't ask for.
 
 ## Sixty seconds
@@ -78,12 +78,12 @@ go get github.com/tomerfooks/minigraph
 
 ## Why so small
 
-LangGraph is excellent — and enormous. minigraph keeps the ideas that carry
+LangGraph is excellent — and enormous. MiniGraph keeps the ideas that carry
 their weight and drops the machinery you rarely touch.
 
 ```text
 LangGraph core + checkpoints (Python)  ████████████████████████████  ~33,700 loc
-minigraph (Go)                         ▏  419 loc
+MiniGraph (Go)                         ▏  419 loc
 ```
 
 Same shape — typed state, conditional edges, cycles, invoke/stream,
@@ -179,7 +179,7 @@ go run ./examples/fanout     # parallel researchers merged into one report
 
 ## Coming from LangGraph
 
-| LangGraph | minigraph |
+| LangGraph | MiniGraph |
 |---|---|
 | `StateGraph(State)` | `New[State]()` — state is any Go type, checked at compile time |
 | node function | `func(ctx, S) (S, error)` |
@@ -195,7 +195,7 @@ go run ./examples/fanout     # parallel researchers merged into one report
 ## Design, in one breath
 
 A node returns the **whole** next state, so there are no reducers — which is
-how minigraph skips LangGraph's largest subsystem. Every node has exactly one
+how MiniGraph skips LangGraph's largest subsystem. Every node has exactly one
 outgoing edge (a static edge is a router that ignores the state), so control
 flow has one place to look. A run is a `(node, state)` pair advancing, so
 **every step is a checkpoint** — interrupts, durability, and retries fall out

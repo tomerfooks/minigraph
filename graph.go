@@ -1,4 +1,5 @@
-// Package minigraph is a minimal LangGraph for Go: a state machine of nodes
+// Package minigraph is MiniGraph — LangGraph for Go, 1.2% of the code.
+// A state machine of nodes
 // that transform a shared, typed state, wired with static or conditional
 // edges. Build a Graph, Compile it, then Invoke or Stream.
 package minigraph
