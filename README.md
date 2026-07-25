@@ -5,7 +5,7 @@
 # MiniGraph
 
 **LangGraph for Go, 1.2% of the code.**
-419 lines — with the comments in. Zero dependencies. You can read all of it.
+420 lines — with the comments in. Zero dependencies. You can read all of it.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/tomerfooks/minigraph.svg)](https://pkg.go.dev/github.com/tomerfooks/minigraph)
 [![CI](https://github.com/tomerfooks/minigraph/actions/workflows/ci.yml/badge.svg)](https://github.com/tomerfooks/minigraph/actions/workflows/ci.yml)
@@ -83,7 +83,7 @@ their weight and drops the machinery you rarely touch.
 
 ```text
 LangGraph core + checkpoints (Python)  ████████████████████████████  ~33,700 loc
-MiniGraph (Go)                         ▏  419 loc
+MiniGraph (Go)                         ▏  420 loc
 ```
 
 Same shape — typed state, conditional edges, cycles, invoke/stream,
@@ -209,7 +209,7 @@ composes from outside.
 
 ## FAQ
 
-**Is it production-ready?** It's 419 lines with more test code than library
+**Is it production-ready?** It's 420 lines with more test code than library
 code. Read it over one coffee and you'll know it better than most of your
 dependencies.
 

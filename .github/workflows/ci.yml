@@ -31,8 +31,14 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      - name: Test (race + coverage)
-        run: go test -race -coverprofile=coverage.txt ./...
+      - name: Test (race)
+        run: go test -race ./...
 
       - name: Build examples
         run: go build ./...
+
+      - name: README line-count claim is honest
+        run: |
+          n=$(cat graph.go checkpoint.go interrupt.go parallel.go | wc -l | tr -d ' ')
+          grep -q "$n lines" README.md && grep -q "$n loc" README.md \
+            || { echo "README line-count claim stale (actual: $n)"; exit 1; }

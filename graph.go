@@ -166,16 +166,16 @@ func (r *App[S]) StreamFrom(ctx context.Context, from Step[S]) iter.Seq2[Step[S]
 			return
 		}
 		for steps := 0; ; steps++ {
+			if err := ctx.Err(); err != nil {
+				yield(Step[S]{Node: at, State: state}, err)
+				return
+			}
 			next, err := r.route(ctx, at, state)
 			if err != nil {
 				yield(Step[S]{Node: at, State: state}, err)
 				return
 			}
 			if next == End {
-				return
-			}
-			if err := ctx.Err(); err != nil {
-				yield(Step[S]{Node: at, State: state}, err)
 				return
 			}
 			if steps >= r.MaxSteps {
