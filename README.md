@@ -13,6 +13,8 @@
 [![Go 1.24+](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+**[minigraph.cite.co.il](https://minigraph.cite.co.il)** — tutorials, comparison, the whole API on one page.
+
 </div>
 
 ---
@@ -168,8 +170,8 @@ saver := &minigraph.MemorySaver[State]{}
 final, err := app.InvokeThread(ctx, saver, "thread-42", initial)
 ```
 
-Twelve runnable examples, no API keys required — each one is a tutorial on
-the [site](https://github.com/tomerfooks/minigraph/tree/master/site) (Astro, static):
+Twelve runnable examples, no API keys required — each one is a tutorial at
+[minigraph.cite.co.il/tutorials](https://minigraph.cite.co.il/tutorials):
 
 ```sh
 go run ./examples/agent       # minimal agent ⇄ tools loop
