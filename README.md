@@ -168,13 +168,22 @@ saver := &minigraph.MemorySaver[State]{}
 final, err := app.InvokeThread(ctx, saver, "thread-42", initial)
 ```
 
-Four runnable examples, no API keys required:
+Twelve runnable examples, no API keys required — each one is a tutorial on
+the [site](https://github.com/tomerfooks/minigraph/tree/master/site):
 
 ```sh
-go run ./examples/agent      # minimal agent ⇄ tools loop
-go run ./examples/react      # ReAct: Thought → Action → Observation, swappable mock LLM
-go run ./examples/approval   # human-in-the-loop on a durable thread
-go run ./examples/fanout     # parallel researchers merged into one report
+go run ./examples/agent       # minimal agent ⇄ tools loop
+go run ./examples/react       # ReAct: Thought → Action → Observation, swappable mock LLM
+go run ./examples/supervisor  # multi-agent: one router node dispatches to workers
+go run ./examples/planexec    # plan-and-execute with a replanner loop
+go run ./examples/reflection  # generate → critique → revise, with a round budget
+go run ./examples/crag        # corrective RAG: retrieve → grade → rewrite → retry
+go run ./examples/mapreduce   # dynamic fan-out: N chunks, N goroutines, one Parallel step
+go run ./examples/approval    # human-in-the-loop on a durable thread
+go run ./examples/durable     # crash, run again, resume from a JSON-file Checkpointer
+go run ./examples/server      # agent behind net/http, every step streamed as SSE
+go run ./examples/llm         # mock by default; ANTHROPIC_API_KEY switches to a real model
+go run ./examples/fanout      # parallel researchers merged into one report
 ```
 
 ## Coming from LangGraph

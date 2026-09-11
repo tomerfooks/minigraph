@@ -1,0 +1,97 @@
+<script setup lang="ts">
+import Code from '../../components/Code.vue'
+const py = `class State(TypedDict):
+    messages: Annotated[list, add_messages]
+    approved: bool
+
+graph = StateGraph(State)
+graph.add_node("agent", call_model)
+graph.add_node("tools", ToolNode(tools))
+graph.add_edge(START, "agent")
+graph.add_conditional_edges("agent", should_continue, ["tools", END])
+graph.add_edge("tools", "agent")
+app = graph.compile(checkpointer=PostgresSaver.from_conn_string(DSN))
+
+for event in app.stream(inputs, config={"configurable": {"thread_id": "42"}}):
+    ...`
+const go = `type State struct {
+    Messages []Message
+    Approved bool
+}
+
+app, err := minigraph.New[State]().
+    AddNode("agent", callModel).
+    AddNode("tools", runTools).
+    AddEdge(minigraph.Start, "agent").
+    AddRouter("agent", shouldContinue).
+    AddEdge("tools", "agent").
+    Compile()
+
+for step, err := range app.StreamThread(ctx, saver, "42", inputs) {
+    ...
+}`
+</script>
+
+<template>
+  <article class="prose">
+    <div class="eyebrow">Comparison</div>
+    <h1>MiniGraph vs LangGraph</h1>
+    <p class="lede">Same ideas. Different language, different size, different set of things you have to trust.</p>
+
+    <p>
+      LangGraph is the reference design for agent runtimes, and it earned that. If your team is in Python or TypeScript,
+      use it. This page is for teams that are in Go, or that want to know exactly what they are running.
+    </p>
+
+    <h2>Side by side</h2>
+    <Code lang="go" label="LangGraph (Python)" :code="py" />
+    <Code lang="go" label="MiniGraph (Go)" :code="go" />
+
+    <h2>Concept mapping</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>LangGraph</th><th>MiniGraph</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><code>StateGraph(State)</code>, <code>TypedDict</code></td><td><code>New[State]()</code>, any Go type</td><td>checked at compile time</td></tr>
+        <tr><td>node function returning a partial update</td><td><code>func(ctx, S) (S, error)</code> returning the whole state</td><td>no reducers</td></tr>
+        <tr><td><code>Annotated[list, add]</code> reducers</td><td>ordinary slice code in the node; <code>merge</code> in <code>Parallel</code></td><td>the largest LangGraph subsystem, absent</td></tr>
+        <tr><td><code>add_edge</code> / <code>add_conditional_edges</code></td><td><code>AddEdge</code> / <code>AddRouter</code></td><td>one outgoing edge per node</td></tr>
+        <tr><td><code>Command(goto=…)</code></td><td>router reads a field the node set</td><td><a href="/tutorials/supervisor">supervisor tutorial</a></td></tr>
+        <tr><td><code>Send</code> + reducer (map-reduce)</td><td>build <code>Parallel</code> inside a node</td><td><a href="/tutorials/mapreduce">map-reduce tutorial</a></td></tr>
+        <tr><td>supersteps, Pregel</td><td>sequential loop; concurrency inside <code>Parallel</code></td><td>deterministic step order</td></tr>
+        <tr><td><code>compile()</code>, <code>invoke</code>, <code>stream</code></td><td><code>Compile()</code>, <code>Invoke</code>, <code>Stream</code></td><td><code>Stream</code> is an <code>iter.Seq2</code></td></tr>
+        <tr><td><code>recursion_limit</code></td><td><code>App.MaxSteps</code></td><td>default 25</td></tr>
+        <tr><td>checkpointer + <code>thread_id</code> + serializer</td><td><code>Checkpointer</code> (2 methods) + <code>InvokeThread</code></td><td>JSON of your struct</td></tr>
+        <tr><td><code>interrupt()</code>, node re-runs on resume</td><td>return <code>&amp;Interrupt{}</code>; resume routes onward</td><td>no replay, no double side effects</td></tr>
+        <tr><td>subgraphs API</td><td><code>App.Invoke</code> is a <code>Node</code></td><td>free</td></tr>
+        <tr><td>LangGraph Platform / Studio / LangSmith</td><td>none</td><td>your service, your tracing</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>Size and surface</h2>
+    <div class="bar"><span>LangGraph core + checkpoint (Python)</span><div class="track"><div class="fill" style="width:100%"></div></div><span>~33,800</span></div>
+    <div class="bar"><span>LangGraph.js core</span><div class="track"><div class="fill" style="width:100%"></div></div><span>~34,000</span></div>
+    <div class="bar"><span>MiniGraph</span><div class="track"><div class="fill go" style="width:1.2%"></div></div><span>420</span></div>
+    <p>Lines of library code, comments included, measured on shallow clones in September 2026. A clean <code>pip install langgraph</code> brings in dozens of packages; MiniGraph's <code>go.mod</code> brings in none. The full sources and methodology are in the repository under <code>docs/pack/alternatives.md</code>.</p>
+
+    <h2>Where LangGraph is the better choice</h2>
+    <ul>
+      <li>You are in Python or TypeScript. Do not add a language for a 420-line library.</li>
+      <li>You want token streaming, checkpoint history, time travel, and a visual debugger out of the box.</li>
+      <li>You want an ecosystem of integrations, prebuilt agents, and a hosted platform with a support contract.</li>
+      <li>You have many writers to one state key and want reducers to arbitrate for you.</li>
+    </ul>
+
+    <h2>Where MiniGraph is the better choice</h2>
+    <ul>
+      <li>The agent lives inside an existing Go service and you refuse a Python sidecar.</li>
+      <li>You ship a CLI or a single binary and cold start matters.</li>
+      <li>You want the state type checked by the compiler and the runtime readable in one sitting.</li>
+      <li>You want durability without a Postgres checkpointer: <a href="/tutorials/durable">a JSON file per thread</a> is 20 lines.</li>
+      <li>You want human-in-the-loop without re-executing the node that paused.</li>
+      <li>Your dependency policy counts packages and CVEs.</li>
+    </ul>
+
+    <h2>Other Go options</h2>
+    <p>CloudWeGo Eino (ByteDance) and Google's ADK for Go are full frameworks with provider bindings, tens of thousands of lines and dozens of modules; they are the right call if you want batteries. langchaingo ports LangChain rather than LangGraph. Several LangGraph ports for Go exist on GitHub; most are dormant, and the maintained one uses untyped state. MiniGraph's position is the small end: typed state, checkpoints, interrupts, and fan-out under 500 lines, with nothing else.</p>
+  </article>
+</template>

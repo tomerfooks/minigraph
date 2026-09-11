@@ -1,0 +1,47 @@
+<script setup lang="ts">
+import Tutorial from '../../../components/Tutorial.vue'
+import Graph from '../../../components/Graph.vue'
+import source from '../../../../examples/llm/main.go?raw'
+import { nav } from '../list'
+const { prev, next } = nav('llm')
+const output = `model: mock (set ANTHROPIC_API_KEY to go live)
+draft: MiniGraph brings LangGraph's graph-of-nodes model to Go in about 420 lines with no dependencies at all.
+final: MiniGraph: LangGraph's ideas, 420 lines of Go, zero deps.`
+</script>
+
+<template>
+  <Tutorial title="Swap in a real model" pattern="real model" :primitives="['Node', 'net/http']"
+    slug="llm" :source="source" :output="output" :prev="prev" :next="next">
+    <template #lede>
+      <p class="lede">MiniGraph has no provider bindings on purpose. A model call is an HTTP request inside a node. Here is what that looks like with the standard library.</p>
+    </template>
+    <template #story>
+      <p>
+        The graph is a two-node chain, <code>draft → tighten</code>. Both nodes call <code>llm</code>, a package variable
+        of type <code>func(ctx, prompt) (string, error)</code>. By default it is the scripted mock, so the example runs
+        offline. Set <code>ANTHROPIC_API_KEY</code> and <code>main</code> points it at <code>anthropic</code>, forty lines
+        of <code>net/http</code> and <code>encoding/json</code> against the Messages API. The graph does not change; the
+        state does not change; the tests you wrote against the mock still pass.
+      </p>
+      <p>
+        That indirection is the entire "binding layer". Use the official SDK if you like it; use a different provider;
+        use two models in one graph. Nothing in the engine knows.
+      </p>
+    </template>
+    <template #graph>
+      <Graph :w="460" :h="120"
+        :nodes="[{id:'draft',x:80,y:50},{id:'tighten',x:250,y:50},{id:'end',x:410,y:50,kind:'end'}]"
+        :edges="[{from:'draft',to:'tighten'},{from:'tighten',to:'end'}]" />
+    </template>
+    <template #notes>
+      <div class="callout">
+        <p><strong>What to notice.</strong> The node passes <code>ctx</code> into <code>http.NewRequestWithContext</code>. Cancel the run and the in-flight model call is aborted, not just the next route. Errors from the call come back as node errors, so the run stops at a Step you can resume, which retries the call.</p>
+      </div>
+      <div class="callout go">
+        <p><strong>Two things the live call does.</strong> It checks <code>stop_reason</code> before reading content, and it sends <code>fallbacks: "default"</code> with the matching beta header so a request the model declines is re-run server-side on another model instead of failing the node.</p>
+      </div>
+      <h2>Make it real</h2>
+      <p>Token streaming lives inside the node too: open a streaming request, forward deltas to wherever you like, and return the assembled text as the node's result. Step streaming (what the engine gives you) and token streaming (what your client gives you) compose without touching the graph.</p>
+    </template>
+  </Tutorial>
+</template>

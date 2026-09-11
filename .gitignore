@@ -15,3 +15,7 @@ coverage.out
 .idea/
 .vscode/
 *.swp
+
+# Site
+/site/node_modules/
+/site/dist/

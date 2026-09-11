@@ -1,0 +1,61 @@
+<script setup lang="ts">
+import Tutorial from '../../../components/Tutorial.vue'
+import Graph from '../../../components/Graph.vue'
+import Code from '../../../components/Code.vue'
+import source from '../../../../examples/approval/main.go?raw'
+import { nav } from '../list'
+const { prev, next } = nav('approval')
+const output = `agent asks: send this? Dear Ada, our Q3 numbers are strong.
+human answers: approved=false feedback="too formal, make it shorter"
+
+agent asks: send this? Hi Ada — Q3 was strong. (revised per: too formal, make it shorter)
+human answers: approved=true feedback="too formal, make it shorter"
+
+sent=true final draft: Hi Ada — Q3 was strong. (revised per: too formal, make it shorter)`
+</script>
+
+<template>
+  <Tutorial title="Pause for approval" pattern="human-in-the-loop" :primitives="['Interrupt', 'InvokeThread', 'Checkpointer']"
+    slug="approval" :source="source" :output="output" :prev="prev" :next="next">
+    <template #lede>
+      <p class="lede">A node returns an Interrupt. The run stops and keeps the state. A human edits it. The run continues from the node that asked, without re-running it.</p>
+    </template>
+    <template #story>
+      <p>
+        <code>approve</code> always pauses: it returns the state and <code>&amp;Interrupt{Payload: …}</code>. Unlike an
+        ordinary error, the state returned alongside an Interrupt is kept, and the yielded <code>Step</code> names the
+        node that paused. The human answers by editing that state (<code>Approved</code>, or <code>Feedback</code>) and
+        saving it under the interrupted node. The next <code>InvokeThread</code> resumes there: routing restarts
+        <em>from</em> <code>approve</code>, so the router decides what the edit means. Approved goes to
+        <code>send</code>; rejected goes back to <code>draft</code>, which now has feedback to work with.
+      </p>
+      <p>
+        Each <code>InvokeThread</code> call could be a different process, a different day, a different pod. The thread
+        checkpoint carries the run. The scripted human rejects once and approves the second draft.
+      </p>
+    </template>
+    <template #graph>
+      <Graph :w="600" :h="230"
+        :nodes="[{id:'draft',x:70,y:70},{id:'approve',x:250,y:70},{id:'send',x:430,y:70},{id:'end',x:550,y:70,kind:'end'},{id:'human',x:250,y:195,kind:'human'}]"
+        :edges="[{from:'draft',to:'approve'},{from:'approve',to:'send',label:'approved'},{from:'send',to:'end'},{from:'approve',to:'human',label:'Interrupt',bend:-30},{from:'human',to:'approve',label:'edited state',bend:-30},{from:'approve',to:'draft',label:'rejected',bend:-80}]" />
+    </template>
+    <template #notes>
+      <div class="callout">
+        <p><strong>What to notice.</strong> The gate is in the <em>router</em>, not the node. Because resume routes onward and never re-runs the interrupted node, a graph that puts <code>approve → send</code> on a static edge would send unapproved on resume. Put every decision that depends on the human's edit in the router after the interrupted node.</p>
+      </div>
+      <div class="callout go">
+        <p><strong>LangGraph difference.</strong> LangGraph's <code>interrupt()</code> resumes by re-executing the node from the top, which is why its docs warn about side effects before the interrupt call. MiniGraph's Interrupt is a return value; there is nothing to replay.</p>
+      </div>
+      <h2>Make it real</h2>
+      <p>Without a thread, the same thing in one process:</p>
+      <Code lang="go" code="final, err := app.Invoke(ctx, initial)
+var intr *minigraph.Interrupt
+if errors.As(err, &amp;intr) {
+    // show intr.Payload to a person, wait for their answer…
+    final.Approved = true
+    final, err = app.InvokeFrom(ctx, minigraph.Step[State]{Node: intr.Node, State: final})
+}" />
+      <p>With a thread, an HTTP handler can answer: load the saved Step, apply the form fields, <code>Save</code> it under <code>intr.Node</code>, and call <code>InvokeThread</code> again. The Payload is not persisted, so store anything the UI needs in the state itself.</p>
+    </template>
+  </Tutorial>
+</template>
