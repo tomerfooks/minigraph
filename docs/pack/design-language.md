@@ -51,8 +51,8 @@ Contrast: body text on paper is ≥ 12:1 in both themes; links (`--go-deep` on `
 
 | Component | Where | Notes |
 |---|---|---|
-| `Code.vue` | every page | Tiny regex highlighter for Go/console. `label` prop shows the file name top-right. `lang="console"` renders a terminal (`$` prompts dimmed). |
-| `Graph.vue` | tutorials, home | Inline SVG: cyan filled circles are nodes, hollow cyan circle is End, amber rounded rectangle is the human. Edges are grey with arrowheads; `bend` curves a return edge. Labels in mono. |
+| `Code.astro` | every page | Astro's built-in Shiki `<Code>` (theme `vitesse-dark`) with the background overridden to `--code-bg`. `label` prop shows the file name top-right. `lang="console"` renders a terminal. |
+| `Graph.astro` | tutorials, home | Inline SVG: cyan filled circles are nodes, hollow cyan circle is End, amber rounded rectangle is the human. Edges are grey with arrowheads; `bend` curves a return edge. Labels in mono. |
 | `.stat` | home, why | Big serif number + small caption underneath. |
 | `.pill` | tutorial headers | Mono tags: pattern name, primitives used, "offline". `go` and `amber` variants. |
 | `.callout` | tutorials | Amber left rule = "what to notice"; `go` variant = a tip. |

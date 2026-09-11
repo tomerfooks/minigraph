@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro'
+import Code from '../components/Code.astro'
+---
+<Base title="MiniGraph API reference" description="The entire MiniGraph API with the guarantee behind each piece: building, running, the three yield conventions, durable threads, Parallel.">
+  <article class="prose">
+    <div class="eyebrow">Reference</div>
+    <h1>The entire API</h1>
+    <p class="lede">Not "getting started". This is the whole surface, with the guarantee behind each piece. Full doc comments are on <a href="https://pkg.go.dev/github.com/tomerfooks/minigraph">pkg.go.dev</a>.</p>
+
+    <h2>Types</h2>
+    <Code lang="go" code={`const Start = "__start__"   // wire Start to your entry node
+const End   = "__end__"     // route to End to finish
+
+type Node[S any]   func(ctx context.Context, state S) (S, error)
+type Router[S any] func(ctx context.Context, state S) (string, error)
+
+type Step[S any] struct { Node string; State S } // one executed step; also a resume point
+
+type Interrupt struct { Payload any; Node string } // return from a node to pause
+
+type Checkpointer[S any] interface {
+    Save(ctx context.Context, thread string, step Step[S]) error
+    Load(ctx context.Context, thread string) (Step[S], bool, error)
+}
+type MemorySaver[S any] struct{ /* zero value ready */ }
+
+var ErrMaxSteps error`} />
+
+    <h2>Building</h2>
+    <Code lang="go" code={`func New[S any]() *Graph[S]
+func (g *Graph[S]) AddNode(name string, fn Node[S]) *Graph[S]
+func (g *Graph[S]) AddEdge(from, to string) *Graph[S]
+func (g *Graph[S]) AddRouter(from string, r Router[S]) *Graph[S]
+func (g *Graph[S]) Compile() (*App[S], error)`} />
+    <ul>
+      <li>Names must be unique and not <code>Start</code>/<code>End</code>; functions must be non-nil.</li>
+      <li>Every node has exactly one outgoing edge. A second <code>AddEdge</code>/<code>AddRouter</code> from the same node is an error.</li>
+      <li>Mistakes accumulate silently and are reported together by <code>Compile</code> via <code>errors.Join</code>: missing entry edge, node without an outgoing edge, edge from or to an unknown node.</li>
+      <li><code>Compile</code> clones the maps. The <code>App</code> is immutable and safe for concurrent use; keep editing the builder if you like.</li>
+    </ul>
+
+    <h2>Running</h2>
+    <Code lang="go" code={`func (r *App[S]) Invoke(ctx context.Context, state S) (S, error)
+func (r *App[S]) Stream(ctx context.Context, state S) iter.Seq2[Step[S], error]
+func (r *App[S]) InvokeFrom(ctx context.Context, from Step[S]) (S, error)
+func (r *App[S]) StreamFrom(ctx context.Context, from Step[S]) iter.Seq2[Step[S], error]
+r.MaxSteps int // default 25`} />
+    <ul>
+      <li><code>StreamFrom</code> is the only engine. Everything else wraps it.</li>
+      <li>A run is <code>(node, state)</code> advancing. <code>Stream</code> yields after every node. Break out of the loop to stop the run.</li>
+      <li>Resume: routing restarts <em>from</em> <code>from.Node</code> with <code>from.State</code>. The checkpointed node is not re-executed.</li>
+      <li><code>MaxSteps</code> counts node executions from zero on each call; exceeding it yields <code>ErrMaxSteps</code>.</li>
+      <li><code>ctx</code> is checked before every route; a cancelled context ends the run with the last good Step.</li>
+    </ul>
+
+    <h3>The three yield conventions</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Node returned</th><th>Step yielded</th><th>Error yielded</th><th>Resuming that Step</th></tr></thead>
+      <tbody>
+        <tr><td>state, nil</td><td>that node + its new state</td><td>nil</td><td>continues onward</td></tr>
+        <tr><td>state, plain error</td><td><strong>last completed</strong> node + last good state</td><td><code>node "x": err</code></td><td>retries the failed node</td></tr>
+        <tr><td>state, <code>*Interrupt</code></td><td>the <strong>interrupted</strong> node + the state it returned</td><td><code>*Interrupt</code> with <code>Node</code> set</td><td>routes onward; the node does not re-run</td></tr>
+      </tbody>
+    </table></div>
+    <p><code>Invoke</code> returns the last good state alongside any error, so you always have something to resume from.</p>
+
+    <h2>Durable threads</h2>
+    <Code lang="go" code={`func (r *App[S]) InvokeThread(ctx context.Context, saver Checkpointer[S], thread string, initial S) (S, error)
+func (r *App[S]) StreamThread(ctx context.Context, saver Checkpointer[S], thread string, initial S) iter.Seq2[Step[S], error]`} />
+    <ul>
+      <li>If the thread has a saved Step, the run resumes from it and <code>initial</code> is ignored; otherwise it starts fresh.</li>
+      <li>Every successful Step is saved before it is yielded; an Interrupt's Step is saved too. Plain errors are not saved, so rerunning the thread retries from the last good Step.</li>
+      <li><code>InvokeThread</code> on a finished thread is a no-op that returns the final state.</li>
+      <li>To answer an Interrupt: edit the returned state, <code>Save</code> it under <code>intr.Node</code>, call again.</li>
+      <li>Semantics are at-least-once: a crash between a node returning and <code>Save</code> re-runs that node. Make side effects idempotent.</li>
+    </ul>
+
+    <h2>Parallel</h2>
+    <Code lang="go" code={`func Parallel[S any](merge func(ctx context.Context, base S, results []S) (S, error), branches ...Node[S]) Node[S]`} />
+    <ul>
+      <li>All branches run concurrently on the same starting state and count as one step.</li>
+      <li>Branches receive shallow copies: reference fields are shared, treat them as read-only, put new data in your copy.</li>
+      <li><code>results</code> are in branch order. The first branch error cancels the siblings' context and fails the node.</li>
+      <li>A compiled <code>App.Invoke</code> is a valid branch, so subgraphs nest without extra API.</li>
+      <li>An Interrupt inside a branch cannot pause the run; put pauses in the outer graph.</li>
+    </ul>
+
+    <h2>Out of scope, on purpose</h2>
+    <p>Per-key reducers, retry policies, token streaming, provider bindings, a platform layer. A node is <code>func(ctx, S) (S, error)</code>; everything else composes from outside. <a href="/why">Why, and how.</a></p>
+  </article>
+</Base>

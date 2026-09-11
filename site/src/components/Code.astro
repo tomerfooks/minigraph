@@ -1,0 +1,11 @@
+---
+// Shiki-highlighted block (Astro's built-in Code) with an optional file label.
+import { Code as Shiki } from 'astro:components'
+interface Props { code: string; lang?: string; label?: string }
+const { code, lang = 'go', label } = Astro.props
+const shikiLang = (lang === 'sh' ? 'shellscript' : lang === 'console' ? 'console' : lang) as any
+---
+<div class="code-wrap">
+  {label && <span class="label">{label}</span>}
+  <Shiki code={code.trim()} lang={shikiLang} theme="vitesse-dark" />
+</div>

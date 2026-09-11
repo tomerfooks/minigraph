@@ -75,8 +75,8 @@ Pinned by `TestErrorStepRetriesFailedNode`, `TestInterruptAndResume`,
 - `examples/*/main.go` — twelve offline demos (`go build ./...` compiles them).
   Each is the source of a tutorial page; the site imports the file at build
   time, so editing an example edits its tutorial.
-- `site/` — the landing site (Vike + Vue, prerendered). `npm install && npm
-  run dev` in `site/`; `npm run build` writes `site/dist/client`. Tokens and
+- `site/` — the landing site (Astro, static, no client JS). `npm install && npm
+  run dev` in `site/`; `npm run build` writes `site/dist`. Tokens and
   intent live in `docs/pack/design-language.md`; copy rules in
   `docs/pack/voice-and-terms.md`.
 - `docs/pack/` — the positioning pack: architecture, code review, features,

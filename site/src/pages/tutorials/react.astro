@@ -1,0 +1,49 @@
+---
+import Tutorial from '../../components/Tutorial.astro'
+import Graph from '../../components/Graph.astro'
+import source from '../../../../examples/react/main.go?raw'
+import { nav } from '../../data/tutorials'
+const { prev, next } = nav('react')
+const output = `Question: What is twice the population of France?
+Thought: I need France's population before I can double it.
+Action: lookup[population of France]
+Observation: 68000000
+Thought: Now I double the population I found.
+Action: calculate[68000000 * 2]
+Observation: 136000000
+Final Answer: Twice the population of France is 136000000.`
+---
+  <Tutorial title="ReAct: Thought, Action, Observation" pattern="ReAct" primitives={['Router', 'Stream', 'Node']}
+    slug="react" source={source} output={output} prev={prev} next={next}>
+    <Fragment slot="lede">
+      <p class="lede">The canonical tool-using agent: the model reasons, names a tool, sees the result, and repeats until it has a final answer.</p>
+    </Fragment>
+    <Fragment slot="story">
+      <p>
+        ReAct is two nodes. <code>reason</code> asks the model for one step: either a Thought plus an Action, or a Final
+        Answer. <code>act</code> runs the named tool and writes the Observation into the trace. The router after
+        <code>reason</code> sends the run to <code>End</code> when an answer exists and to <code>act</code> otherwise.
+      </p>
+      <p>
+        The interesting part is the <code>LLM</code> type: <code>func(ctx, prompt string) (string, error)</code>. The
+        example ships a scripted mock that answers by counting completed turns. Replace it with a real completion call and
+        the graph, the parser, and the tools stay exactly as they are. Tool failures are written into the trace as
+        observations too, so the model can react to them instead of the run dying.
+      </p>
+    </Fragment>
+    <Fragment slot="graph">
+      <Graph w={460} h={190}
+        nodes={[{id:'reason',x:80,y:70},{id:'act',x:250,y:70},{id:'end',x:410,y:70,kind:'end'}]}
+        edges={[{from:'reason',to:'act',label:'Action'},{from:'act',to:'reason',label:'Observation',bend:55},{from:'reason',to:'end',label:'Final Answer',bend:-70}]} />
+    </Fragment>
+    <Fragment slot="notes">
+      <div class="callout">
+        <p><strong>What to notice.</strong> The prompt is rebuilt from the state on every turn (<code>prompt(s)</code>), so the state <em>is</em> the memory. There is no hidden message list inside the engine; whatever you keep in the struct is what the model sees.</p>
+      </div>
+      <div class="callout go">
+        <p><strong>Shared slices.</strong> <code>act</code> edits the last turn through a pointer into <code>s.Trace</code>. That is fine in a sequential graph, but a previously yielded <code>Step</code> shares that backing array. If you keep old Steps around (history, time travel), copy the slice before mutating it.</p>
+      </div>
+      <h2>Make it real</h2>
+      <p>Swap <code>mockLLM</code> for a function that calls your provider (see <a href="/tutorials/llm">Swap in a real model</a>) and put real tools in the <code>tools</code> map. Keep the parser strict: a model that emits neither an Action nor a Final Answer should produce an error, which stops the run at a resumable Step instead of looping on garbage.</p>
+    </Fragment>
+  </Tutorial>

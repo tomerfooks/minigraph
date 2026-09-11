@@ -1,0 +1,41 @@
+---
+// Inline SVG graph diagram. nodes: {id,x,y,kind?}, edges: {from,to,label?,bend?}
+type N = { id: string; x: number; y: number; kind?: 'end' | 'human' | 'start' }
+type E = { from: string; to: string; label?: string; bend?: number }
+interface Props { w: number; h: number; nodes: N[]; edges: E[] }
+const { w, h, nodes, edges } = Astro.props
+const find = (id: string) => nodes.find((n) => n.id === id)!
+const geom = (e: E) => {
+  const a = find(e.from), b = find(e.to)
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1
+  const ux = dx / len, uy = dy / len, r = 22, bend = e.bend ?? 0
+  const sx = a.x + ux * r, sy = a.y + uy * r, ex = b.x - ux * r, ey = b.y - uy * r
+  const mx = (sx + ex) / 2 - uy * bend, my = (sy + ey) / 2 + ux * bend
+  return {
+    d: `M${sx},${sy} Q${mx},${my} ${ex},${ey}`,
+    lx: (a.x + b.x) / 2 - uy * (bend * 0.6 + 14),
+    ly: (a.y + b.y) / 2 + ux * (bend * 0.6 + 14) + 4,
+  }
+}
+---
+<svg class="diagram" viewBox={`0 0 ${w} ${h}`} width={w} height={h} role="img">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"></path>
+    </marker>
+  </defs>
+  {edges.map((e) => { const g = geom(e); return (
+    <>
+      <path class="edge" marker-end="url(#arr)" d={g.d}></path>
+      {e.label && <text class="lab" text-anchor="middle" x={g.lx} y={g.ly}>{e.label}</text>}
+    </>
+  )})}
+  {nodes.map((n) => (
+    <>
+      {n.kind === 'human'
+        ? <rect class="node human" x={n.x - 40} y={n.y - 16} width="80" height="32" rx="6"></rect>
+        : <circle class:list={['node', n.kind]} cx={n.x} cy={n.y} r={n.kind === 'end' ? 12 : 16}></circle>}
+      <text x={n.x} y={n.y + 34} text-anchor="middle">{n.id}</text>
+    </>
+  ))}
+</svg>

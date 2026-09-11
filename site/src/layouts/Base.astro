@@ -1,0 +1,66 @@
+---
+import '../styles/global.css'
+interface Props { title?: string; description?: string }
+const {
+  title = 'MiniGraph — LangGraph for Go, 1.2% of the code',
+  description = 'MiniGraph is a 420-line, zero-dependency graph engine for Go agents: typed state, cycles, checkpoints, interrupts, parallel fan-out. You can read all of it.',
+} = Astro.props
+const path = Astro.url.pathname
+const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/why', label: 'Why' },
+  { href: '/vs-langgraph', label: 'vs LangGraph' },
+  { href: '/tutorials', label: 'Tutorials' },
+  { href: '/api', label: 'API' },
+]
+const active = (href: string) => (href === '/' ? path === '/' : path.startsWith(href))
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MiniGraph" />
+    <meta property="og:image" content="/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0F1115" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <a href="/" class="brand">
+          <img src="/logo.svg" alt="" width="28" height="28" />
+          <span>MiniGraph</span>
+        </a>
+        <nav>
+          {nav.map((n) => <a href={n.href} class:list={{ active: active(n.href) }}>{n.label}</a>)}
+          <a href="https://github.com/tomerfooks/minigraph" class="gh" rel="noopener">GitHub ↗</a>
+        </nav>
+      </header>
+      <main><slot /></main>
+      <footer class="foot">
+        <div>
+          <strong>MiniGraph</strong> · LangGraph for Go, 1.2% of the code · MIT ©
+          <a href="https://github.com/tomerfooks">Tomer Fooks</a>
+        </div>
+        <div class="foot-links">
+          <a href="https://pkg.go.dev/github.com/tomerfooks/minigraph">pkg.go.dev</a>
+          <a href="https://github.com/tomerfooks/minigraph">Source</a>
+          <a href="https://github.com/tomerfooks/minigraph/issues">Issues</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

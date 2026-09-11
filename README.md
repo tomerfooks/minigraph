@@ -169,7 +169,7 @@ final, err := app.InvokeThread(ctx, saver, "thread-42", initial)
 ```
 
 Twelve runnable examples, no API keys required — each one is a tutorial on
-the [site](https://github.com/tomerfooks/minigraph/tree/master/site):
+the [site](https://github.com/tomerfooks/minigraph/tree/master/site) (Astro, static):
 
 ```sh
 go run ./examples/agent       # minimal agent ⇄ tools loop
